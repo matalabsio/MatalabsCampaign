@@ -40,7 +40,7 @@ the email link opens the visitor's configured email application.
 
 ## Project files
 
-- `Images/`: the six slide images and access screen logo.
+- `Images/`: the six slide images, access screen logo, and browser icons.
 - `src/data/slides.js`: slide order, descriptions, image imports, and link areas.
 - `app.js`: access screen and slideshow navigation.
 - `styles.css`: responsive layout, transitions, and access screen styles.
