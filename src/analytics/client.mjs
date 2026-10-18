@@ -1,8 +1,27 @@
 import { ExposureClock } from './clock.mjs';
 
+export function normalizeApiUrl(value) {
+  const input=value.trim();
+  const url=new URL(input.includes('://') ? input : 'https://'+input);
+  const local=['localhost','127.0.0.1'].includes(url.hostname);
+  if ((url.protocol!=='https:' && !(local && url.protocol==='http:')) ||
+      url.username || url.password || url.search || url.hash || url.pathname!=='/' ||
+      (!local && !url.hostname.includes('.'))) throw Error('Invalid analytics API origin');
+  return url.origin;
+}
+
+export function initializeAnalytics(value, slideCount) {
+  if (!value.trim()) return {client:null,error:null,configured:false};
+  try {
+    return {client:new AnalyticsClient(value,slideCount),error:null,configured:true};
+  } catch {
+    return {client:null,configured:true,error:'Analytics configuration error. Set VITE_ANALYTICS_API_URL to the full HTTPS Worker URL, without /admin, and redeploy.'};
+  }
+}
+
 export class AnalyticsClient {
   constructor(baseUrl, slideCount) {
-    this.base = baseUrl.replace(/\/$/,'');
+    this.base = normalizeApiUrl(baseUrl);
     this.count = slideCount;
     this.openedAt = new Date().toISOString();
     this.token = null;
@@ -18,7 +37,6 @@ export class AnalyticsClient {
       if (value && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) this.visitorId=value;
       else localStorage.setItem('mata_analytics_browser_v1',this.visitorId);
     } catch { /* Without storage, each page visit gets a new browser identifier. */ }
-    if (this.base && new URL(this.base).protocol !== 'https:' && !['localhost','127.0.0.1'].includes(new URL(this.base).hostname)) throw Error('Analytics URL must use HTTPS');
   }
   async unlock(password, initialSlide = 0) {
     if (Date.now() - Date.parse(this.openedAt) > 6 * 60 * 60 * 1000 - 60000) {

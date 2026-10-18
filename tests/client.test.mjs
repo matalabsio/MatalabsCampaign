@@ -1,6 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AnalyticsClient } from '../src/analytics/client.mjs';
+import { AnalyticsClient, normalizeApiUrl, initializeAnalytics } from '../src/analytics/client.mjs';
+
+test('API URLs accept a bare Worker hostname and reject unsafe or incorrect endpoints', () => {
+  const host='matalabs-campaign-analytics.product-ea6.workers.dev';
+  assert.equal(normalizeApiUrl(host),'https://'+host);
+  assert.equal(normalizeApiUrl('  https://'+host+'/  '),'https://'+host);
+  assert.equal(normalizeApiUrl('http://localhost:8787/'),'http://localhost:8787');
+  for(const url of ['http://'+host,'https://'+host+'/admin','not a url','javascript:alert(1)','https://user:pass@'+host,'https://'+host+'?secret=x']) {
+    assert.throws(()=>normalizeApiUrl(url));
+  }
+});
+
+test('invalid configured API does not throw during startup or silently enable local authentication',()=>{
+  const state=initializeAnalytics('not a url',6);
+  assert.equal(state.client,null);
+  assert.match(state.error,/configuration/i);
+  assert.equal(state.configured,true);
+  const disabled=initializeAnalytics('',6);
+  assert.equal(disabled.configured,false);
+  assert.equal(disabled.error,null);
+});
 
 test('client keeps failed uploads, sends cumulative times, pauses hidden time, and records link clicks', async () => {
   const names=['window','document','location','localStorage','fetch','performance','setInterval'];

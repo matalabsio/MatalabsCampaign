@@ -6,13 +6,14 @@
 
 import { inject } from '@vercel/analytics';
 import { slidesData } from './src/data/slides.js';
-import { AnalyticsClient } from './src/analytics/client.mjs';
+import { initializeAnalytics } from './src/analytics/client.mjs';
 
 const analyticsApi = import.meta.env.VITE_ANALYTICS_API_URL || '';
-const analytics = analyticsApi ? new AnalyticsClient(analyticsApi, slidesData.length) : null;
+const analyticsState = initializeAnalytics(analyticsApi, slidesData.length);
+const analytics = analyticsState.client;
 
 // Custom tracking replaces the Vercel tracker when its backend is configured.
-if (!analytics) inject({ mode: import.meta.env.PROD ? 'production' : 'development' });
+if (!analyticsState.configured) inject({ mode: import.meta.env.PROD ? 'production' : 'development' });
 
 
 // ==========================================================================
@@ -47,7 +48,11 @@ class AuthManager {
     });
     // Keep the existing presentation usable until the Cloudflare URL is configured.
     // Configured analytics always authenticates with the backend; old local sessions cannot authorize it.
-    if (!analytics) {
+    if (analyticsState.error) {
+      this.errorEl.textContent = analyticsState.error;
+      this.errorEl.style.display = 'block';
+    }
+    if (!analyticsState.configured) {
       try {
         const saved = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY));
         if (saved?.authenticated && saved.hash === TARGET_PASS_HASH && saved.expiresAt > Date.now()) this.gateEl.classList.add('is-hidden');
@@ -63,6 +68,7 @@ class AuthManager {
     button.disabled = true;
     this.errorEl.style.display = 'none';
     try {
+      if (analyticsState.error) throw Error(analyticsState.error);
       if (analytics) {
         await analytics.unlock(password, Number(document.querySelector('.slide-section.is-active')?.dataset.slideIndex || 0));
       } else {
