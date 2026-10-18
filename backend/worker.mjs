@@ -58,8 +58,9 @@ export function createHandler(storeFactory = createStore) {
           return respond(detail);
         }
         if (url.pathname !== '/report') throw new HttpError(404,'Not found');
-        const days = Number(url.searchParams.get('days') || 7);
-        requireValue(Number.isInteger(days) && days >= 1 && days <= 90);
+        const period = url.searchParams.get('days') || 'all';
+        const days = period === 'all' ? null : Number(period);
+        requireValue(days === null || (Number.isInteger(days) && days >= 1 && days <= 90));
         return respond(await store.report(days));
       }
       if (!origin || !config.origins.includes(origin)) throw new HttpError(403,'Origin not allowed');
@@ -103,6 +104,7 @@ export function createHandler(storeFactory = createStore) {
 export default {
   fetch: createHandler(),
   async scheduled(_event, env, ctx) {
+    if (env.RETENTION_ENABLED !== 'true') return;
     settings(env);
     ctx.waitUntil(createStore(env.DATABASE_URL,env.SITE_ID).cleanup(7,90));
   },

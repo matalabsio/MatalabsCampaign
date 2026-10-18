@@ -96,12 +96,21 @@ stronger organizational isolation is required.
 
 ## Retention and reporting
 
-A daily Cron Trigger at 03:17 UTC clears raw IPs after 7 days and deletes sessions
-and cascading events/timings after 90 days. Check the first scheduled execution
-in Cloudflare; disabling the trigger stops automated retention. Reports show the
-latest 100 sessions in a selected 1–90 day window, plus aggregate browser counts,
-time per slide and clicks. Session detail shows up to 500 events. Database
-backups follow Neon's own retention and are not erased by deleting live rows.
+Automatic deletion is currently **disabled**. `RETENTION_ENABLED` defaults to
+`false`, and the deployment config has no Cron Triggers. The scheduled handler
+also does nothing unless this flag is explicitly `true`, so an old dashboard
+schedule cannot clear data after the new version is deployed. Sessions, events,
+slide timings and IP addresses remain in Neon. This cannot restore data already
+deleted by an earlier version.
+
+The reporting dashboard defaults to **All time** and shows the latest 100
+sessions, with all-time aggregates. Date-window filters remain available. Each
+session detail includes up to 500 events.
+
+To restore retention later, set `RETENTION_ENABLED` to `true` in the committed
+Worker config AND add a Cron Trigger. The retained cleanup implementation clears
+IPs after 7 days and deletes sessions with cascading events/timings after 90 days.
+Do not enable it until the company explicitly chooses to resume deletion.
 
 Link IDs use zero-based slide and link index: `4:0` SDOT, `4:1` BandForge,
 `5:0` Instagram, `5:1` email, `5:2` WhatsApp, `5:3` LinkedIn.

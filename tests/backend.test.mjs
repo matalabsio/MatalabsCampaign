@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 import { createStore } from '../backend/store.mjs';
-import { createHandler } from '../backend/worker.mjs';
+import worker, { createHandler } from '../backend/worker.mjs';
 import { readJson } from '../backend/security.mjs';
 
 const allow = {limit:async()=>({success:true})};
@@ -60,9 +60,24 @@ test('real Postgres migration, authentication, ingestion, deduplication, isolati
     await db.query("UPDATE analytics.sessions SET unlocked_at=now()-interval '8 days' WHERE id=$1",[session.sessionId]);
     await store.cleanup(7,90);detail=await store.detail(session.sessionId);assert.equal(detail.session.ip_address,null);
     await db.query("UPDATE analytics.sessions SET unlocked_at=now()-interval '91 days' WHERE id=$1",[session.sessionId]);
+    const allTime=await store.report(null);
+    assert.equal(allTime.summary.sessions,1);
+    assert.equal(allTime.sessions.length,1);
+    assert.equal(allTime.slides.length,2);
+    assert.equal((await store.report(90)).summary.sessions,0);
     await store.cleanup(7,90);assert.equal(await store.detail(session.sessionId),null);
     assert.equal((await db.query('SELECT count(*)::int n FROM analytics.events')).rows[0].n,0);
   } finally {await db.close();}
+});
+
+test('automatic cleanup is disabled by default and cannot run from an old Cron Trigger',async()=>{
+  const ctx={waitUntil(){assert.fail('Disabled retention must not start a database operation');}};
+  await worker.scheduled({}, {}, ctx);
+  await worker.scheduled({}, {...env,RETENTION_ENABLED:'false'}, ctx);
+  const {readFile}=await import('node:fs/promises');
+  const config=JSON.parse(await readFile(new URL('../wrangler.analytics.jsonc',import.meta.url),'utf8'));
+  assert.equal(config.vars.RETENTION_ENABLED,'false');
+  assert.deepEqual(config.triggers.crons,[]);
 });
 
 test('rate limiting and unavailable configuration fail closed before database access',async()=>{

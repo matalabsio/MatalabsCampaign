@@ -36,15 +36,15 @@ export function createStore(databaseUrl, site, query = neon(databaseUrl).query) 
       const [summary, sessions, slides, clicks] = await Promise.all([
         query(`SELECT count(*)::int AS sessions,count(DISTINCT visitor_id)::int AS browsers,
           coalesce(sum(viewing_ms),0)::float8 AS viewing_ms,coalesce(sum(elapsed_ms),0)::float8 AS elapsed_ms
-          FROM analytics.sessions WHERE site_id=$1 AND unlocked_at>now()-$2*interval '1 day'`,[site,days]),
+          FROM analytics.sessions WHERE site_id=$1 AND ($2::integer IS NULL OR unlocked_at>now()-$2::integer*interval '1 day')`,[site,days]),
         query(`SELECT id,visitor_id,opened_at,unlocked_at,last_seen_at,ip_address,user_agent,share_tag,viewing_ms::float8,elapsed_ms::float8
-          FROM analytics.sessions WHERE site_id=$1 AND unlocked_at>now()-$2*interval '1 day'
+          FROM analytics.sessions WHERE site_id=$1 AND ($2::integer IS NULL OR unlocked_at>now()-$2::integer*interval '1 day')
           ORDER BY unlocked_at DESC LIMIT 100`,[site,days]),
         query(`SELECT t.slide,sum(t.viewing_ms)::float8 AS viewing_ms FROM analytics.slide_timings t
           JOIN analytics.sessions s ON s.site_id=t.site_id AND s.id=t.session_id
-          WHERE t.site_id=$1 AND s.unlocked_at>now()-$2*interval '1 day' GROUP BY t.slide ORDER BY t.slide`,[site,days]),
+          WHERE t.site_id=$1 AND ($2::integer IS NULL OR s.unlocked_at>now()-$2::integer*interval '1 day') GROUP BY t.slide ORDER BY t.slide`,[site,days]),
         query(`SELECT link_id,count(*)::int AS clicks FROM analytics.events WHERE site_id=$1
-          AND type='link_click' AND received_at>now()-$2*interval '1 day' GROUP BY link_id`,[site,days]),
+          AND type='link_click' AND ($2::integer IS NULL OR received_at>now()-$2::integer*interval '1 day') GROUP BY link_id`,[site,days]),
       ]);
       return {siteId:site,days,summary:summary[0],sessions,slides,clicks};
     },

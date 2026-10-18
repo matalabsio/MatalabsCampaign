@@ -4,11 +4,11 @@ export const adminPage = `<!doctype html>
 <body><main><h1>Presentation analytics</h1>
 <p>Active viewing time excludes hidden or unfocused tabs. Browser identifiers are not verified people. No location is collected.</p>
 <form id="login"><label>Reporting password <input id="password" type="password" autocomplete="current-password" required></label>
-<label>Period <select id="days"><option value="1">Today / last 24 hours</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label>
+<label>Period <select id="days"><option value="all" selected>All time</option><option value="1">Today / last 24 hours</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label>
 <button>Load report</button><button type="button" id="logout">Clear report</button></form>
 <p id="status" role="status"></p><section id="report" hidden>
 <h2 id="summary"></h2><h3>Viewing time by slide</h3><div id="slides"></div><h3>Link clicks</h3><div id="clicks"></div>
-<h3>Latest 100 sessions</h3><p>Times are shown in Asia/Kolkata. IP addresses are cleared after 7 days. Sessions expire from reports after 90 days.</p>
+<h3>Latest 100 sessions</h3><p>Times are shown in Asia/Kolkata. Automatic deletion is disabled. Session records and IP addresses are retained until retention is re-enabled.</p>
 <div class="scroll"><table><thead><tr><th>Opened</th><th>Unlocked</th><th>Last seen</th><th>Viewing</th><th>Elapsed</th><th>IP</th><th>Share tag</th><th>Details</th></tr></thead><tbody id="sessions"></tbody></table></div>
 <h3>Session details</h3><pre id="detail">Select a session.</pre></section></main><script src="/admin.js" defer></script></body></html>`;
 export const adminStyles = `*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#182240;font:16px system-ui}main{max-width:1250px;margin:auto;padding:32px 20px}h1{color:#0b1b5c}p{line-height:1.6}form{display:flex;gap:16px;flex-wrap:wrap;align-items:end;background:white;padding:20px;border-radius:12px}label{display:grid;gap:8px}input,select,button{font:inherit;padding:10px;border:1px solid #bac3d5;border-radius:6px}button{cursor:pointer;background:#0b1b5c;color:white}button:disabled{opacity:.5}table{border-collapse:collapse;background:white;width:100%}td,th{padding:12px;text-align:left;border-bottom:1px solid #dbe0ea;white-space:nowrap}.scroll{overflow:auto}pre{background:white;padding:20px;white-space:pre-wrap;overflow-wrap:anywhere}#status{min-height:26px}`;

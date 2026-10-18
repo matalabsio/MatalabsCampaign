@@ -6,7 +6,8 @@
   "vars": {
     "SITE_ID": "matalabs-campaign",
     "SLIDE_COUNT": "6",
-    "ALLOWED_ORIGINS": "https://kiriti.mortha.matalabs.io,https://matalabs-campaign.vercel.app"
+    "ALLOWED_ORIGINS": "https://kiriti.mortha.matalabs.io,https://matalabs-campaign.vercel.app",
+    "RETENTION_ENABLED": "false"
   },
   "ratelimits": [
     {
@@ -35,8 +36,6 @@
     }
   ],
   "triggers": {
-    "crons": [
-      "17 3 * * *"
-    ]
+    "crons": []
   }
 }
