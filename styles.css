@@ -1,0 +1,407 @@
+/* MATA Labs director profile: slide transitions and access screen. */
+
+:root {
+  --navy-primary: #0B1B5C;
+  --navy-dark: #060e33;
+  --canvas-light: #FEFEFE;
+  --text-dark: #0B1B5C;
+  --text-light: #FEFEFE;
+  --text-light-muted: #b0bcd6;
+  --font-display: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--navy-dark);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   PRESENTATION DECK CONTAINER
+   ========================================================================== */
+.presentation-deck {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Base Slide Section */
+.slide-section {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  overflow: hidden;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* Slide Section Background Themes */
+.slide-section.theme-dark {
+  background-color: var(--navy-primary);
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(26, 47, 114, 0.45) 0%, transparent 60%),
+    radial-gradient(circle at 90% 80%, rgba(13, 24, 62, 0.6) 0%, transparent 60%);
+  color: var(--text-light);
+}
+
+.slide-section.theme-light {
+  background-color: var(--canvas-light);
+  background-image:
+    radial-gradient(circle at 90% 10%, rgba(230, 235, 245, 0.6) 0%, transparent 50%),
+    radial-gradient(circle at 10% 90%, rgba(240, 242, 248, 0.5) 0%, transparent 50%);
+  color: var(--text-dark);
+}
+
+@media (min-width: 769px) {
+  .presentation-deck {
+    perspective: 1600px;
+    perspective-origin: 50% 50%;
+  }
+
+  .slide-section {
+    padding: 50px 32px;
+    transform-origin: 50% 50%;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform, opacity;
+    transition: transform 0.65s cubic-bezier(0.2, 0.9, 0.3, 1),
+                opacity 0.65s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  /* Active resting slide */
+  .slide-section.is-active,
+  .slide-section.desktop-in {
+    opacity: 1 !important;
+    pointer-events: auto;
+    z-index: 20;
+    transform: translate3d(0, 0, 0) scale(1) rotateX(0deg) !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Past slide (Glided Up) */
+  .slide-section.is-past,
+  .slide-section.desktop-out-up {
+    opacity: 0 !important;
+    pointer-events: none;
+    z-index: 10;
+    transform: translate3d(0, -100%, -80px) scale(0.92) rotateX(6deg) !important;
+  }
+
+  /* Future slide (Waiting Below) */
+  .slide-section.is-future,
+  .slide-section.desktop-out-down {
+    opacity: 0 !important;
+    pointer-events: none;
+    z-index: 10;
+    transform: translate3d(0, 100%, -80px) scale(0.92) rotateX(-6deg) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .presentation-deck {
+    perspective: 1500px;
+    perspective-origin: 15% 50%;
+  }
+
+  .slide-section {
+    padding: 36px 20px 24px 20px;
+    transform-origin: 0% 50%; /* Left spine axis */
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform, opacity;
+    transition: transform 0.58s cubic-bezier(0.25, 1, 0.5, 1),
+                opacity 0.58s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  /* Active resting slide */
+  .slide-section.is-active,
+  .slide-section.mobile-flip-in {
+    opacity: 1 !important;
+    pointer-events: auto;
+    z-index: 20;
+    transform: rotateY(0deg) translateZ(0) scale(1) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Past slide (Flipped open to the left of spine) */
+  .slide-section.is-past,
+  .slide-section.mobile-flip-out {
+    opacity: 0 !important;
+    pointer-events: none;
+    z-index: 30; /* Stays on top during forward turn */
+    transform: rotateY(-110deg) translateZ(-10px) scale(0.96) !important;
+  }
+
+  /* Underneath waiting slide */
+  .slide-section.is-future,
+  .slide-section.mobile-underneath {
+    opacity: 0.95 !important;
+    pointer-events: none;
+    z-index: 10;
+    transform: rotateY(0deg) translateZ(-25px) scale(0.97) !important;
+  }
+
+}
+
+.auth-gate-container {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  background-color: var(--navy-dark);
+  background-image:
+    radial-gradient(circle at 50% 30%, rgba(20, 42, 130, 0.5) 0%, transparent 65%),
+    radial-gradient(circle at 80% 80%, rgba(6, 14, 51, 0.7) 0%, transparent 60%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  will-change: opacity, transform;
+}
+
+.auth-gate-container.is-hidden {
+  display: none !important;
+}
+
+.auth-gate-container.is-unlocked {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 44px 32px 36px 32px;
+  background: rgba(11, 27, 92, 0.72);
+  border: 1px solid rgba(254, 254, 254, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-logo-wrap {
+  margin-bottom: 24px;
+}
+
+.auth-logo {
+  width: 145px;
+  height: auto;
+  display: block;
+}
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 1.95rem);
+  font-weight: 700;
+  color: var(--text-light);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.auth-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-light-muted);
+  line-height: 1.45;
+  margin-bottom: 28px;
+  max-width: 320px;
+}
+
+.auth-form {
+  width: 100%;
+}
+
+.auth-input-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.auth-input {
+  width: 100%;
+  height: 50px;
+  padding: 0 100px 0 18px;
+  background: rgba(254, 254, 254, 0.08);
+  border: 1px solid rgba(254, 254, 254, 0.18);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text-light);
+  letter-spacing: 0.06em;
+  outline: none;
+  transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.auth-input::placeholder {
+  color: rgba(254, 254, 254, 0.4);
+  letter-spacing: normal;
+}
+
+.auth-input:focus {
+  border-color: var(--text-light);
+  background: rgba(254, 254, 254, 0.12);
+  box-shadow: 0 0 0 3px rgba(254, 254, 254, 0.12);
+}
+
+.auth-input.is-error {
+  border-color: #f87171 !important;
+  animation: authShake 0.45s ease;
+}
+
+@keyframes authShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-7px); }
+  40%, 80% { transform: translateX(7px); }
+}
+
+.auth-submit-btn {
+  position: absolute;
+  right: 7px;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: var(--text-light);
+  color: var(--navy-primary);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+}
+
+.auth-submit-btn:hover {
+  transform: scale(1.05);
+  background: #ffffff;
+}
+
+.auth-submit-btn:active {
+  transform: scale(0.96);
+}
+
+.auth-error-msg {
+  display: none;
+  font-size: 0.8rem;
+  color: #f87171;
+  margin-top: 10px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.auth-footer-tag {
+  margin-top: 28px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: rgba(254, 254, 254, 0.4);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* Display the supplied artwork in full, without cropping on any screen. */
+.presentation-deck .slide-section {
+  padding: 0;
+  background-image: none;
+}
+.slide-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Keep link hit areas aligned with the artwork, including letterboxed views. */
+.slide-artwork {
+  position: relative;
+  width: min(100%, calc(100dvh * 1279 / 1600));
+  aspect-ratio: 1279 / 1600;
+  max-height: 100%;
+}
+.slide-link {
+  position: absolute;
+  display: block;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.slide-link:hover {
+  background: rgba(125, 150, 220, 0.12);
+}
+.slide-link:focus-visible {
+  outline: 3px solid #58b9ef;
+  outline-offset: 2px;
+  background: rgba(125, 150, 220, 0.18);
+}
+
+/* Keep the contact artwork footer clear beneath the rule. */
+#slide-5 .slide-artwork::after {
+  content: '';
+  position: absolute;
+  left: 7%;
+  top: 93%;
+  width: 36%;
+  height: 6.5%;
+  background: #0c1b5c;
+  pointer-events: none;
+}
+.auth-visibility-btn {
+  position: absolute;
+  right: 48px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-light);
+  cursor: pointer;
+}
+.auth-visibility-btn:hover {
+  background: rgba(254, 254, 254, 0.1);
+}
+.auth-visibility-btn:focus-visible {
+  outline: 2px solid var(--text-light);
+  outline-offset: -2px;
+}
+.auth-eye-slash {
+  display: none;
+}
+.auth-visibility-btn[aria-pressed="true"] .auth-eye-slash {
+  display: block;
+}
+/* Suppress the browser's duplicate password reveal control. */
+.auth-input::-ms-reveal {
+  display: none;
+}
