@@ -1,0 +1,42 @@
+{
+  "name": "matalabs-campaign-analytics",
+  "main": "backend/worker.mjs",
+  "compatibility_date": "2026-10-18",
+  "workers_dev": true,
+  "vars": {
+    "SITE_ID": "matalabs-campaign",
+    "SLIDE_COUNT": "6",
+    "ALLOWED_ORIGINS": "https://kiriti.mortha.matalabs.io,https://matalabs-campaign.vercel.app"
+  },
+  "ratelimits": [
+    {
+      "name": "LOGIN_LIMITER",
+      "namespace_id": "724001",
+      "simple": {
+        "limit": 20,
+        "period": 60
+      }
+    },
+    {
+      "name": "EVENT_LIMITER",
+      "namespace_id": "724002",
+      "simple": {
+        "limit": 120,
+        "period": 60
+      }
+    },
+    {
+      "name": "ADMIN_LIMITER",
+      "namespace_id": "724003",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "17 3 * * *"
+    ]
+  }
+}

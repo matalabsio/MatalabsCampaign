@@ -38,12 +38,16 @@ This checkout has no Vercel project link or deployment overrides. `.vercel/` sta
 ignored so a future local link is never committed. Web links open in new tabs;
 the email link opens the visitor's configured email application.
 
-## Web Analytics
+## Session analytics backend
 
-Vercel Web Analytics is initialized once in `app.js` using `@vercel/analytics`.
-Production builds record page views; local development uses debug mode.
-In the company Vercel project, open **Analytics** and click **Enable** before
-redeploying. No analytics API key or environment variable is required.
+The Vercel frontend can connect to a Cloudflare Worker and the shared Neon
+analytics database. See [backend/README.md](backend/README.md) for the full
+Cloudflare setup, migration, secrets, testing, reporting and retention steps.
+
+Set `VITE_ANALYTICS_API_URL` in Vercel only after the Worker and database are
+verified. Until then, the existing local presentation gate and Vercel Web
+Analytics continue to work. Configuring the custom API replaces Vercel tracking.
+The new tracker never requests browser permissions or collects location.
 
 ## Project files
 

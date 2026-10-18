@@ -55,20 +55,11 @@
         <div id="auth-error" class="auth-error-msg">Incorrect access key. Please try again.</div>
       </form>
 
+      <p class="auth-privacy">Usage analytics records visits, viewing time, link clicks, and IP addresses. No location is collected.</p>
       <div class="auth-footer-tag">MATA LABS POLCOMMS · PRIVILEGED ACCESS</div>
     </div>
   </div>
-  <script>
-    try {
-      const s = localStorage.getItem('mata_deck_session_v2');
-      if (s) {
-        const d = JSON.parse(s);
-        if (d && d.authenticated && d.hash === '5e20f90a6cc155b3fa6b957cebae0afe60d4c290274ae1815b69a4f0b08b0aa7' && d.expiresAt > Date.now()) {
-          document.getElementById('auth-gate').classList.add('is-hidden');
-        }
-      }
-    } catch(e) {}
-  </script>
+
 
   <!-- Full-Page Presentation Container -->
   <main class="presentation-deck" id="presentation-deck">

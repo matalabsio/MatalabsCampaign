@@ -6,8 +6,13 @@
 
 import { inject } from '@vercel/analytics';
 import { slidesData } from './src/data/slides.js';
+import { AnalyticsClient } from './src/analytics/client.mjs';
 
-inject({ mode: import.meta.env.PROD ? 'production' : 'development' });
+const analyticsApi = import.meta.env.VITE_ANALYTICS_API_URL || '';
+const analytics = analyticsApi ? new AnalyticsClient(analyticsApi, slidesData.length) : null;
+
+// Custom tracking replaces the Vercel tracker when its backend is configured.
+if (!analytics) inject({ mode: import.meta.env.PROD ? 'production' : 'development' });
 
 
 // ==========================================================================
@@ -22,183 +27,58 @@ const SESSION_DURATION_MS = 6 * 60 * 60 * 1000; // 6 Hours
 const TARGET_PASS_HASH = "5e20f90a6cc155b3fa6b957cebae0afe60d4c290274ae1815b69a4f0b08b0aa7";
 
 class AuthManager {
-  constructor(onSuccess) {
-    this.onSuccess = onSuccess;
+  constructor() {
     this.gateEl = document.getElementById('auth-gate');
-    this.formEl = document.getElementById('auth-form');
     this.inputEl = document.getElementById('auth-input');
     this.errorEl = document.getElementById('auth-error');
-
-    this.init();
-  }
-
-  init() {
     const visibilityButton = document.getElementById('auth-visibility-btn');
-    if (visibilityButton && this.inputEl) {
-      visibilityButton.addEventListener('click', () => {
-        const showPassword = this.inputEl.type === 'password';
-        this.inputEl.type = showPassword ? 'text' : 'password';
-        const label = showPassword ? 'Hide password' : 'Show password';
-        visibilityButton.setAttribute('aria-label', label);
-        visibilityButton.setAttribute('aria-pressed', String(showPassword));
-        visibilityButton.title = label;
-      });
-    }
-
-    if (this.isSessionValid()) {
-      if (this.gateEl) {
-        this.gateEl.classList.add('is-hidden');
-      }
-      if (typeof this.onSuccess === 'function') {
-        this.onSuccess();
-      }
-      return;
-    }
-
-    if (this.formEl) {
-      this.formEl.addEventListener('submit', (e) => this.handleSubmit(e));
-    }
-  }
-
-  isSessionValid() {
-    try {
-      const raw = localStorage.getItem(AUTH_SESSION_KEY);
-      if (!raw) return false;
-      const data = JSON.parse(raw);
-      // Validates authentication, matching password hash, and 6-hour timestamp
-      if (data && data.authenticated && data.hash === TARGET_PASS_HASH && data.expiresAt && Date.now() < data.expiresAt) {
-        return true;
-      }
-      localStorage.removeItem(AUTH_SESSION_KEY);
-      return false;
-    } catch {
-      return false;
-    }
-  }
-
-  saveSession() {
-    const session = {
-      authenticated: true,
-      hash: TARGET_PASS_HASH,
-      expiresAt: Date.now() + SESSION_DURATION_MS
-    };
-    try {
-      localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
-    } catch (e) {
-      console.warn('localStorage not accessible', e);
-    }
-  }
-
-  // Robust SHA-256 using Web Crypto API with pure JS mathematical fallback
-  async hashPassword(str) {
-    if (window.crypto && crypto.subtle && crypto.subtle.digest) {
-      try {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(str);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      } catch (err) {
-        console.warn('SubtleCrypto error, falling back to math implementation', err);
-      }
-    }
-    return this.sha256Fallback(str);
-  }
-
-  sha256Fallback(ascii) {
-    function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }
-    const words = [];
-    const asciiBitLength = ascii.length * 8;
-    let hash = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
-    const k = [
-      0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-      0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-      0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-      0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-      0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-      0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-      0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-      0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-    ];
-    let i, j;
-    for (i = 0; i < ascii.length; i++) {
-      const code = ascii.charCodeAt(i);
-      words[i >> 2] |= (code & 0xff) << (24 - (i % 4) * 8);
-    }
-    words[asciiBitLength >> 5] |= 0x80 << (24 - (asciiBitLength % 32));
-    words[(((asciiBitLength + 64) >> 9) << 4) + 15] = asciiBitLength;
-    for (i = 0; i < words.length; i += 16) {
-      const w = [];
-      for (j = 0; j < 64; j++) {
-        if (j < 16) {
-          w[j] = words[i + j] | 0;
-        } else {
-          const s0 = rightRotate(w[j - 15], 7) ^ rightRotate(w[j - 15], 18) ^ (w[j - 15] >>> 3);
-          const s1 = rightRotate(w[j - 2], 17) ^ rightRotate(w[j - 2], 19) ^ (w[j - 2] >>> 10);
-          w[j] = (w[j - 16] + s0 + w[j - 7] + s1) | 0;
-        }
-      }
-      let [a, b, c, d, e, f, g, h] = hash;
-      for (j = 0; j < 64; j++) {
-        const s1 = rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25);
-        const ch = (e & f) ^ ((~e) & g);
-        const temp1 = (h + s1 + ch + k[j] + w[j]) | 0;
-        const s0 = rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22);
-        const maj = (a & b) ^ (a & c) ^ (b & c);
-        const temp2 = (s0 + maj) | 0;
-        h = g; g = f; f = e; e = (d + temp1) | 0; d = c; c = b; b = a; a = (temp1 + temp2) | 0;
-      }
-      hash[0] = (hash[0] + a) | 0; hash[1] = (hash[1] + b) | 0; hash[2] = (hash[2] + c) | 0; hash[3] = (hash[3] + d) | 0;
-      hash[4] = (hash[4] + e) | 0; hash[5] = (hash[5] + f) | 0; hash[6] = (hash[6] + g) | 0; hash[7] = (hash[7] + h) | 0;
-    }
-    let result = '';
-    for (i = 0; i < 8; i++) {
-      for (j = 3; j >= 0; j--) {
-        const byte = (hash[i] >> (j * 8)) & 0xff;
-        result += byte.toString(16).padStart(2, '0');
-      }
-    }
-    return result;
-  }
-
-  async handleSubmit(e) {
-    e.preventDefault();
-    if (!this.inputEl) return;
-
-    const entered = this.inputEl.value.trim();
-    if (!entered) return;
-
-    const hash = await this.hashPassword(entered);
-
-    // Cryptographic match check (zero plaintext password in code)
-    if (hash === TARGET_PASS_HASH) {
-      this.saveSession();
-      if (this.errorEl) this.errorEl.style.display = 'none';
-      if (this.gateEl) {
-        this.gateEl.classList.add('is-unlocked');
-        setTimeout(() => {
-          this.gateEl.classList.add('is-hidden');
-        }, 650);
-      }
-      if (typeof this.onSuccess === 'function') {
-        this.onSuccess();
-      }
-    } else {
-      this.showError();
-    }
-  }
-
-  showError() {
-    if (this.inputEl) {
-      this.inputEl.classList.add('is-error');
-      this.inputEl.select();
-      setTimeout(() => {
-        this.inputEl.classList.remove('is-error');
-      }, 500);
-    }
-    if (this.errorEl) {
+    visibilityButton.addEventListener('click', () => {
+      const show = this.inputEl.type === 'password';
+      this.inputEl.type = show ? 'text' : 'password';
+      visibilityButton.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      visibilityButton.setAttribute('aria-pressed', String(show));
+      visibilityButton.title = show ? 'Hide password' : 'Show password';
+    });
+    document.getElementById('auth-form').addEventListener('submit', event => this.handleSubmit(event));
+    window.addEventListener('analytics:expired', () => {
+      this.gateEl.classList.remove('is-hidden','is-unlocked');
+      this.errorEl.textContent = 'Session expired. Please enter the access key again.';
       this.errorEl.style.display = 'block';
+    });
+    // Keep the existing presentation usable until the Cloudflare URL is configured.
+    // Configured analytics always authenticates with the backend; old local sessions cannot authorize it.
+    if (!analytics) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY));
+        if (saved?.authenticated && saved.hash === TARGET_PASS_HASH && saved.expiresAt > Date.now()) this.gateEl.classList.add('is-hidden');
+      } catch { /* Storage may be disabled. */ }
     }
+  }
+  async handleSubmit(event) {
+    event.preventDefault();
+    const password = this.inputEl.value.trim();
+    if (!password || this.pending) return;
+    this.pending = true;
+    const button = document.getElementById('auth-submit-btn');
+    button.disabled = true;
+    this.errorEl.style.display = 'none';
+    try {
+      if (analytics) {
+        await analytics.unlock(password, Number(document.querySelector('.slide-section.is-active')?.dataset.slideIndex || 0));
+      } else {
+        const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password));
+        const hash = Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
+        if (hash !== TARGET_PASS_HASH) throw Error('Incorrect access key. Please try again.');
+        try {localStorage.setItem(AUTH_SESSION_KEY,JSON.stringify({authenticated:true,hash,expiresAt:Date.now()+SESSION_DURATION_MS}));} catch { /* Optional storage. */ }
+      }
+      this.inputEl.value = '';
+      this.gateEl.classList.add('is-unlocked');
+      setTimeout(()=>this.gateEl.classList.add('is-hidden'),650);
+    } catch (error) {
+      this.errorEl.textContent = error.name === 'TimeoutError' || error instanceof TypeError ? 'Unable to connect. Please try again.' : error.message;
+      this.errorEl.style.display = 'block';
+      this.inputEl.select();
+    } finally { this.pending=false;button.disabled=false; }
   }
 }
 
@@ -245,10 +125,12 @@ class PresentationDeck {
       const artwork = document.createElement('div');
       artwork.className = 'slide-artwork';
       artwork.appendChild(image);
-      for (const link of slide.links || []) {
+      for (const [linkIndex, link] of (slide.links || []).entries()) {
         const anchor = document.createElement('a');
         anchor.className = 'slide-link';
         anchor.href = link.href;
+        anchor.dataset.linkId = `${idx}:${linkIndex}`;
+        anchor.dataset.slide = String(idx);
         anchor.setAttribute('aria-label', link.label);
         anchor.title = link.label;
         if (link.href.startsWith('https://')) {
@@ -270,6 +152,7 @@ class PresentationDeck {
   updateStaticStates(activeIndex) {
     if (activeIndex < 0 || activeIndex >= this.slides.length) return;
     this.currentIndex = activeIndex;
+    analytics?.slide(activeIndex);
 
     const sections = document.querySelectorAll('.slide-section');
     sections.forEach((section, idx) => {

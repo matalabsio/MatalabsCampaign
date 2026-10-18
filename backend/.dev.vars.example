@@ -1,0 +1,6 @@
+# Copy to the repository root .dev.vars for local Wrangler development ONLY.
+# Never commit the real file or paste credentials into chat.
+DATABASE_URL="postgresql://ROLE:PASSWORD@HOST/DATABASE?sslmode=require"
+PRESENTATION_PASSWORD="replace-with-visitor-password"
+SESSION_SECRET="replace-with-at-least-32-random-characters"
+ADMIN_PASSWORD="replace-with-a-different-strong-password-at-least-16-characters"
