@@ -20,8 +20,23 @@ npm run build
 npm run preview
 ```
 
-Vite builds the site into `dist/`. The included `vercel.json` configures deployment
-on Vercel. Link this checkout to the desired Vercel project before deploying.
+Vite builds the site into `dist/`.
+
+## Deploy from the company Vercel account
+
+1. Select the company team in Vercel, then choose **Add New → Project**.
+2. Import `matalabsio/MatalabsCampaign` from GitHub, using branch `main`.
+3. Select **Vite**, keep the root directory at the repository root, use
+   `npm run build` as the build command and `dist` as the output directory.
+4. Deploy. No environment variables are required by the application.
+5. Open **Settings → Domains** and add `kirthi.mortha.matalabs.io`.
+6. At the DNS provider for `matalabs.io`, create the CNAME record Vercel shows.
+   The record name is typically `kirthi.mortha`; copy the exact target from Vercel.
+7. Wait for Vercel to report a valid domain configuration and an active certificate.
+
+This checkout has no Vercel project link or deployment overrides. `.vercel/` stays
+ignored so a future local link is never committed. Web links open in new tabs;
+the email link opens the visitor's configured email application.
 
 ## Project files
 
