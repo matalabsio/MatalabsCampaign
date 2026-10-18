@@ -4,7 +4,10 @@
 // Desktop: 3D Page Lift & Depth Animation (smooth full-page transition)
 // ==========================================================================
 
+import { inject } from '@vercel/analytics';
 import { slidesData } from './src/data/slides.js';
+
+inject({ mode: import.meta.env.PROD ? 'production' : 'development' });
 
 
 // ==========================================================================

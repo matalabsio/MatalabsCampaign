@@ -38,6 +38,13 @@ This checkout has no Vercel project link or deployment overrides. `.vercel/` sta
 ignored so a future local link is never committed. Web links open in new tabs;
 the email link opens the visitor's configured email application.
 
+## Web Analytics
+
+Vercel Web Analytics is initialized once in `app.js` using `@vercel/analytics`.
+Production builds record page views; local development uses debug mode.
+In the company Vercel project, open **Analytics** and click **Enable** before
+redeploying. No analytics API key or environment variable is required.
+
 ## Project files
 
 - `Images/`: the six slide images, access screen logo, and browser icons.
