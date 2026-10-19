@@ -69,11 +69,11 @@ export const slidesData = [
     "title": "Contact",
     "bgTheme": "dark",
     "imagePath": slide5,
-    "alt": "Kiriti Mortha, Director, MATA Labs OPC. Instagram: @kiriti.mortha. Email: director@matalabs.io. Phone / WhatsApp: +91 91003 60999. LinkedIn: linkedin.com/in/k-mortha.",
+    "alt": "Kiriti Mortha, Director, MATA Labs OPC. Instagram: @kiriti_mortha. Email: director@matalabs.io. Phone / WhatsApp: +91 91003 60999. LinkedIn: linkedin.com/in/k-mortha.",
     "links": [
       {
-        "label": "Kiriti Mortha on Instagram",
-        "href": "https://www.instagram.com/kiriti.mortha/",
+        "label": "Kiriti Mortha on Instagram (@kiriti_mortha)",
+        "href": "https://www.instagram.com/kiriti_mortha/",
         "bounds": [
           100,
           575,
