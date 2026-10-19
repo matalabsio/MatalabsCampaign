@@ -77,9 +77,8 @@ third-party cookies, or browser permission requests.
   logged as analytics data.
 - IP is taken only from Cloudflare's `CF-Connecting-IP`, not a browser body or
   `X-Forwarded-For`. It identifies a network connection, not a verified person.
-- A small disclosure on the unlock screen explains session analytics without
-  showing a permission or consent prompt. Set a suitable company privacy policy
-  and access process for these records.
+- The unlock screen has no analytics notice or permission prompt. Maintain the
+  company privacy policy and access process for these records separately.
 - Successful analytics activation uses server-side authentication. Images are
   still public static assets on Vercel; this does NOT make the entire deck private.
 

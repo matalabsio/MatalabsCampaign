@@ -406,5 +406,4 @@ html, body {
   display: none;
 }
 
-.auth-privacy { font-size: .7rem; line-height: 1.5; color: var(--text-light-muted); margin-top: 18px; }
 .auth-submit-btn:disabled { opacity: .5; cursor: wait; }
